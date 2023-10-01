@@ -18,7 +18,7 @@ import (
 
 const (
 	baseUrl  = "https://wxjw.bistu.edu.cn/authserver/login" // BISTU 教务网登录页面
-	loginUrl = baseUrl + "?service=https://jwxt.bistu.edu.cn:443/jwapp/sys/emaphome/portal/index.do"
+	loginUrl = "https://wxjw.bistu.edu.cn/authserver/login?service=https://jwxt.bistu.edu.cn:443/jwapp/sys/emaphome/portal/index.do"
 	maxRetry = 3 // 最大重试次数
 )
 
@@ -36,7 +36,7 @@ func Login(username, password string) ([]*http.Cookie, error) {
 }
 
 func login(username, password string) ([]*http.Cookie, error) {
-	params, err := getParams(username, password)
+	params, password, err := getParams(username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -49,18 +49,20 @@ func login(username, password string) ([]*http.Cookie, error) {
 		log.Fatalf("登录失败: %v", err)
 		return nil, err
 	}
+	//// TODO 待删除
+	//httputil.Get("https://jwxt.bistu.edu.cn/jwapp/sys/emaphome/portal/index.do", nil)
 
 	// TODO 测试；打印 Cookie
 	fmt.Printf("\nresp cookie: %v\n", resp.Cookies())
-	fmt.Printf("\nhttputil.GetCookies(baseUrl): %v\n", httputil.GetCookies(baseUrl))
+	//fmt.Printf("\nhttputil.GetCookies(baseUrl): %v\n", httputil.GetCookies(baseUrl))
 	// 拷贝 cookie
-	httputil.AddCookie("https://jwxt.bistu.edu.cn/", httputil.GetCookies(baseUrl))
+	//httputil.AddCookie("https://jwxt.bistu.edu.cn/", httputil.GetCookies(baseUrl))
 	defer resp.Body.Close()
 	return resp.Cookies(), nil // return appropriate value
 }
 
 // 登录前准备：获取请求参数
-func getParams(username string, password string) (url.Values, error) {
+func getParams(username string, password string) (url.Values, string, error) {
 	var encryptKey, execution string
 	params := url.Values{} // params 是登录请求参数
 	// 创建 goColly
@@ -81,16 +83,18 @@ func getParams(username string, password string) (url.Values, error) {
 		}
 	})
 	// 请求登录页
-	err := c.Visit(baseUrl)
+	err := c.Visit(loginUrl)
 	if err != nil {
 		log.Fatalf("fail to visit login web: %v", err)
-		return nil, err
+		return nil, "", err
 	}
 	// 对密码进行 AES-CBC-PKCS7Padding 加密
 	password, err = encryutil.CBCEncrypt([]byte(utils.RandomNString(64)+password), []byte(encryptKey))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
+	// TODO 打印 cookie
+	fmt.Println(c.Cookies(baseUrl))
 	// 将 colly 的 cookie 转移到 golang http
 	httputil.AddCookie(baseUrl, c.Cookies(baseUrl))
 	// 准备登录请求参数
@@ -110,9 +114,9 @@ func getParams(username string, password string) (url.Values, error) {
 			retryCount++
 		}
 		if len(code) != 4 {
-			return nil, errors.New("验证码识别失败")
+			return nil, "", errors.New("验证码识别失败")
 		}
 	}
 	params["captcha"] = []string{code}
-	return params, nil
+	return params, password, nil
 }

@@ -1,8 +1,11 @@
 package httputil
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,7 +17,12 @@ const (
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
 )
 
-var client = &http.Client{}
+var client = &http.Client{
+	Transport: &http.Transport{
+		// 因为学校采用的是自签证书，所以这里需要跳过 SSL/TLS 证书验证
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	},
+}
 var once sync.Once
 
 func init() {
@@ -27,10 +35,13 @@ func Get(link string, header http.Header) (*http.Response, error) {
 	req, _ := http.NewRequest("GET", link, nil)
 	if header != nil {
 		req.Header = header
-		req.Header.Add("User-Agent", UserAgent)
 	}
 	req.Header.Add("User-Agent", UserAgent)
-	return client.Do(req)
+	// 暂时性的将请求打印出来
+	response, _ := client.Do(req)
+	all, _ := io.ReadAll(response.Body)
+	fmt.Println(link + "===》》》" + string(all))
+	return response, nil
 }
 
 func Post(link string, header http.Header, data io.Reader) (*http.Response, error) {
@@ -70,4 +81,14 @@ func removeAllCookie() {
 func CookiesToString(cookies []*http.Cookie) string {
 	cookieBytes, _ := json.Marshal(cookies)
 	return string(cookieBytes)
+}
+
+func StringToCookie(data string) []*http.Cookie {
+	cookies := make([]*http.Cookie, 8)
+	err := json.Unmarshal([]byte(data), &cookies)
+	if err != nil {
+		log.Fatalf("read cookie file err: %v", err)
+		return nil
+	}
+	return cookies
 }
