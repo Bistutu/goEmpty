@@ -1,10 +1,13 @@
 package httputil
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
+	"sync"
 )
 
 const (
@@ -12,19 +15,15 @@ const (
 )
 
 var client = &http.Client{}
+var once sync.Once
 
 func init() {
-	jar, _ := cookiejar.New(nil)
-	client.Jar = jar
+	once.Do(func() {
+		jar, _ := cookiejar.New(nil)
+		client.Jar = jar
+	})
 }
-
-func POST(link string, data io.Reader) (*http.Response, error) {
-	req, _ := http.NewRequest("POST", link, data)
-	req.Header.Add("User-Agent", UserAgent)
-	return client.Do(req)
-}
-
-func GET(link string, header http.Header) (*http.Response, error) {
+func Get(link string, header http.Header) (*http.Response, error) {
 	req, _ := http.NewRequest("GET", link, nil)
 	if header != nil {
 		req.Header = header
@@ -34,7 +33,41 @@ func GET(link string, header http.Header) (*http.Response, error) {
 	return client.Do(req)
 }
 
+func Post(link string, header http.Header, data io.Reader) (*http.Response, error) {
+	req, _ := http.NewRequest("POST", link, data)
+	if header != nil {
+		req.Header = header
+	}
+	req.Header.Add("User-Agent", UserAgent)
+	return client.Do(req)
+}
+
+func PostForm(link string, header http.Header, params url.Values) (*http.Response, error) {
+	req, _ := http.NewRequest("POST", link, strings.NewReader(params.Encode()))
+	if header != nil {
+		req.Header = header
+	}
+	req.Header.Add("User-Agent", UserAgent)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	return client.Do(req)
+}
+
 func AddCookie(link string, cookies []*http.Cookie) {
 	parse, _ := url.Parse(link)
 	client.Jar.SetCookies(parse, cookies)
+}
+func GetCookies(link string) []*http.Cookie {
+	parse, _ := url.Parse(link)
+	return client.Jar.Cookies(parse)
+}
+
+func removeAllCookie() {
+	jar, _ := cookiejar.New(nil)
+	client.Jar = jar
+}
+
+// CookiesToString 将 []*http.Cookie 转换为字符串。
+func CookiesToString(cookies []*http.Cookie) string {
+	cookieBytes, _ := json.Marshal(cookies)
+	return string(cookieBytes)
 }

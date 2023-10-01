@@ -1,4 +1,4 @@
-package utils
+package logutil
 
 import (
 	"os"
@@ -34,11 +34,11 @@ func NewLog() *zap.SugaredLogger {
 
 		// 使用 lumberjack 进行日志轮替
 		fileWriteSyncer := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   "./logs/myapp.log", // 日志文件位置
-			MaxSize:    2,                  // 日志文件最大大小 (MB)
-			MaxBackups: 5,                  // 最多保留的备份数
-			MaxAge:     28,                 // 日志文件的最大保存天数
-			Compress:   false,              // 是否压缩备份的日志文件
+			Filename:   "/logs/goEmpty.log", // 日志文件位置
+			MaxSize:    2,                   // 日志文件最大大小 (MB)
+			MaxBackups: 5,                   // 最多保留的备份数
+			MaxAge:     28,                  // 日志文件的最大保存天数
+			Compress:   false,               // 是否压缩备份的日志文件
 		})
 
 		// 设置日志输出到控制台
