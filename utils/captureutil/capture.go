@@ -6,6 +6,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,17 +15,9 @@ import (
 	"github.com/anthonynsimon/bild/effect"
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/otiai10/gosseract/v2"
-	"go.uber.org/zap"
 
 	"GoEmpty/utils/httputil"
-	"GoEmpty/utils/logutil"
 )
-
-var log *zap.SugaredLogger
-
-func init() {
-	log = logutil.NewLog()
-}
 
 // GetCaptureCode 获取验证码
 func GetCaptureCode() string {

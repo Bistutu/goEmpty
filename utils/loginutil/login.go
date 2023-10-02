@@ -3,7 +3,6 @@ package loginutil
 import (
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -49,14 +48,6 @@ func login(username, password string) ([]*http.Cookie, error) {
 		log.Fatalf("登录失败: %v", err)
 		return nil, err
 	}
-	//// TODO 待删除
-	//httputil.Get("https://jwxt.bistu.edu.cn/jwapp/sys/emaphome/portal/index.do", nil)
-
-	// TODO 测试；打印 Cookie
-	fmt.Printf("\nresp cookie: %v\n", resp.Cookies())
-	//fmt.Printf("\nhttputil.GetCookies(baseUrl): %v\n", httputil.GetCookies(baseUrl))
-	// 拷贝 cookie
-	//httputil.AddCookie("https://jwxt.bistu.edu.cn/", httputil.GetCookies(baseUrl))
 	defer resp.Body.Close()
 	return resp.Cookies(), nil // return appropriate value
 }
@@ -93,8 +84,6 @@ func getParams(username string, password string) (url.Values, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	// TODO 打印 cookie
-	fmt.Println(c.Cookies(baseUrl))
 	// 将 colly 的 cookie 转移到 golang http
 	httputil.AddCookie(baseUrl, c.Cookies(baseUrl))
 	// 准备登录请求参数

@@ -3,7 +3,6 @@ package httputil
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -38,10 +37,7 @@ func Get(link string, header http.Header) (*http.Response, error) {
 	}
 	req.Header.Add("User-Agent", UserAgent)
 	// 暂时性的将请求打印出来
-	response, _ := client.Do(req)
-	all, _ := io.ReadAll(response.Body)
-	fmt.Println(link + "===》》》" + string(all))
-	return response, nil
+	return client.Do(req)
 }
 
 func Post(link string, header http.Header, data io.Reader) (*http.Response, error) {
@@ -91,4 +87,9 @@ func StringToCookie(data string) []*http.Cookie {
 		return nil
 	}
 	return cookies
+}
+
+func RemoveAllCookie() {
+	jar, _ := cookiejar.New(nil)
+	client.Jar = jar
 }

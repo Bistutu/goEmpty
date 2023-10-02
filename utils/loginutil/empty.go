@@ -2,7 +2,6 @@ package loginutil
 
 import (
 	"net/http"
-	"os"
 
 	"GoEmpty/utils/httputil"
 )
@@ -12,7 +11,7 @@ func GetEmptyCookie(username, password string) ([]*http.Cookie, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 开始发送 5 次请求
+	// 开始发送 5 次请求，获取空教室页面的 Cookie
 	httputil.Get("https://jwxt.bistu.edu.cn/jwapp/i18n.do?appName=emaphome&EMAP_LANG=zh",
 		http.Header{"Referer": []string{"https://jwxt.bistu.edu.cn/jwapp/sys/emaphome/portal/index.do"}})
 
@@ -27,12 +26,11 @@ func GetEmptyCookie(username, password string) ([]*http.Cookie, error) {
 
 	httputil.Get("https://jwxt.bistu.edu.cn/jwapp/sys/jwpubapp/pub/setJwCommonAppRole.do",
 		http.Header{"Referer": []string{"https://jwxt.bistu.edu.cn/jwapp/sys/kxjas/*default/index.do?EMAP_LANG=zh"}})
-	// 返回
-
+	// 获取最后的 Cookie
 	cookies = httputil.GetCookies("https://jwxt.bistu.edu.cn/jwapp/")
-	// 将 cookie 暂时保存至文件
-	file, _ := os.Create("cookie.txt")
-	defer file.Close()
-	file.WriteString(httputil.CookiesToString(cookies))
+	//将 cookie 暂时保存至文件
+	//file, _ := os.Create("cookie.txt")
+	//defer file.Close()
+	//file.WriteString(httputil.CookiesToString(cookies))
 	return cookies, nil
 }

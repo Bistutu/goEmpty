@@ -6,18 +6,10 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"errors"
-
-	"go.uber.org/zap"
+	"log"
 
 	"GoEmpty/utils"
-	"GoEmpty/utils/logutil"
 )
-
-var log *zap.SugaredLogger
-
-func init() {
-	log = logutil.NewLog()
-}
 
 func CBCEncrypt(text []byte, key []byte) (string, error) {
 	// iv 为随机的 16 位字符串
